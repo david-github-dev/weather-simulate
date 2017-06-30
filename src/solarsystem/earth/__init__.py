@@ -1,17 +1,13 @@
 # -*- coding: utf-8 -*-
 
-import numpy as np
+import numpy as mNumpy
 from numpy.random import random
 
-from solarsys import dlng, dlat, dalt, bottom, top, north_pole, south_pole, theta
+from solarsystem import dLongitude, dLatitude, dAltitude, bottom, top, mNorthPole, mSouthPole, theta
 
 context = {}
 
-
-g = 9.80665
-
-Omega = 2 * np.pi / (24 * 3600 * 0.99726966323716)
-
+Omega = 2 * mNumpy.pi / (24 * 3600 * 0.99726966323716)
 gamma = 6.49 / 1000
 gammad = 9.80 / 1000
 cv = 718.0
@@ -19,18 +15,8 @@ cp = 1005.0
 R = 287
 miu = 1.72e-1
 M = 0.0289644 # molar mass of dry air, 0.0289644 kg/mol
-
 niu = 0.1 # friction between air and land surface
 niu_matrix = niu * bottom
-
-
-SunConst = 1366
-
-StefanBoltzmann = 0.0000000567
-WaterHeatCapacity = 4185.5
-RockHeatCapacity = 840
-WaterDensity = 1000
-RockDensity = 2650
 
 
 def inject_random_nearby(i, j, thresh, speed, src, tgt):
@@ -57,36 +43,36 @@ def inject_random_nearby(i, j, thresh, speed, src, tgt):
 
 
 def filter_extream_scalar(name, array):
-    mask = np.isnan(array)
-    array[mask] = np.average(array[~mask])
+    mask = mNumpy.isnan(array)
+    array[mask] = mNumpy.average(array[~mask])
 
-    mx = np.max(array)
-    mn = np.min(array)
+    mx = mNumpy.max(array)
+    mn = mNumpy.min(array)
 
     xthresh = (1 - 0.001) * mx + 0.001 * mn
     xthresh_less = (1 - 0.002) * mx + 0.002 * mn
     nthresh = 0.001 * mx + (1 - 0.001) * mn
     nthresh_more = 0.002 * mx + (1 - 0.002) * mn
 
-    pmask = np.where(array >= xthresh)
-    nmask = np.where((array < xthresh) * (array > xthresh_less))
+    pmask = mNumpy.where(array >= xthresh)
+    nmask = mNumpy.where((array < xthresh) * (array > xthresh_less))
     if len(nmask[1]) != 0:
-        array[pmask] = np.average(array[nmask])
+        array[pmask] = mNumpy.average(array[nmask])
 
-    pmask = np.where(array <= nthresh)
-    nmask = np.where((array > nthresh) * (array < nthresh_more))
+    pmask = mNumpy.where(array <= nthresh)
+    nmask = mNumpy.where((array > nthresh) * (array < nthresh_more))
     if len(nmask[1]) != 0:
-        array[pmask] = np.average(array[nmask])
+        array[pmask] = mNumpy.average(array[nmask])
 
-    #np.copyto(array, ndimage.gaussian_filter(array, 0.2 * (np.max(context['T'].curval) - np.min(context['T'].curval)) / 150.0))
+    #mNumpy.copyto(array, ndimage.gaussian_filter(array, 0.2 * (mNumpy.max(context['T'].curval) - mNumpy.min(context['T'].curval)) / 150.0))
 
 
 def filter_extream_vector(name, array, u, v, w):
-    mask = np.isnan(array)
-    array[mask] = np.average(array[~mask])
+    mask = mNumpy.isnan(array)
+    array[mask] = mNumpy.average(array[~mask])
 
     speed = u * u + v * v + w * w
-    mx = np.max(speed)
+    mx = mNumpy.max(speed)
     xthresh = (1 - 0.01) * mx
     shape = speed.shape
     for i in range(shape[0]):
@@ -100,24 +86,24 @@ def filter_extream_vector(name, array, u, v, w):
                 if name == 'w':
                     inject_random_nearby(i, j, xthresh, speed, w, array)
 
-    np.copyto(array, 0.97 * array)
+    mNumpy.copyto(array, 0.97 * array)
 
 
 def combine_scalar(array):
-    nval = np.mean(array[:, 0])
-    sval = np.mean(array[:, -1])
+    nval = mNumpy.mean(array[:, 0])
+    sval = mNumpy.mean(array[:, -1])
     array[:, 0] = nval
     array[:, -1] = sval
 
 
 def combine_vector(name, array, u, v):
     th = theta[:, 0, 0]
-    uval = np.mean(np.cos(th) * u + np.sin(th) * v)
-    vval = np.mean(- np.sin(th) * u + np.cos(th) * v)
+    uval = mNumpy.mean(mNumpy.cos(th) * u + mNumpy.sin(th) * v)
+    vval = mNumpy.mean(- mNumpy.sin(th) * u + mNumpy.cos(th) * v)
     if name == 'u':
-        array[:] = np.cos(th) * uval - np.sin(th) * vval
+        array[:] = mNumpy.cos(th) * uval - mNumpy.sin(th) * vval
     if name == 'v':
-        array[:] = np.sin(th) * uval + np.cos(th) * vval
+        array[:] = mNumpy.sin(th) * uval + mNumpy.cos(th) * vval
 
 
 def merge(name, array, compu=None, compv=None, compw=None):
@@ -136,7 +122,7 @@ def merge(name, array, compu=None, compv=None, compw=None):
     else:
         combine_scalar(array)
 
-    return np.copy(array)
+    return mNumpy.copy(array)
 
 
 class Grid(object):
@@ -147,12 +133,12 @@ class Grid(object):
         self.name = name
         context[name] = self
 
-        self.drvval = np.zeros([lng_size, lat_size, alt_size])
-        self.nxtval = np.zeros([lng_size, lat_size, alt_size])
+        self.drvval = mNumpy.zeros([lng_size, lat_size, alt_size])
+        self.nxtval = mNumpy.zeros([lng_size, lat_size, alt_size])
         if initfn:
             self.curval = initfn()
         else:
-            self.curval = np.ones([lng_size, lat_size, alt_size]) * initval
+            self.curval = mNumpy.ones([lng_size, lat_size, alt_size]) * initval
 
     def evolve(self, dt):
         kwargs = {k: v.curval for k, v in context.iteritems()}
@@ -160,12 +146,12 @@ class Grid(object):
         val = self.curval + dval
         for i in range(32):
             if self.name in {'u', 'v', 'w'}:
-                np.copyto(self.nxtval[:, :, i], merge(self.name, val[:, :, i],
+                mNumpy.copyto(self.nxtval[:, :, i], merge(self.name, val[:, :, i],
                                                       compu=context['u'].curval[:, :, i],
                                                       compv=context['v'].curval[:, :, i],
                                                       compw=context['w'].curval[:, :, i],))
             else:
-                np.copyto(self.nxtval[:, :, i], merge(self.name, val[:, :, i]))
+                mNumpy.copyto(self.nxtval[:, :, i], merge(self.name, val[:, :, i]))
         self.drvval[:, :, :] = (self.nxtval - self.curval) / dt
 
     def step(self, ** kwargs):
@@ -174,12 +160,12 @@ class Grid(object):
     def swap(self):
         for i in range(32):
             if self.name in {'u', 'v', 'w'}:
-                np.copyto(self.curval[:, :, i], merge(self.name, self.nxtval[:, :, i],
+                mNumpy.copyto(self.curval[:, :, i], merge(self.name, self.nxtval[:, :, i],
                                                       compu=context['u'].nxtval[:, :, i],
                                                       compv=context['v'].nxtval[:, :, i],
                                                       compw=context['w'].nxtval[:, :, i],))
             else:
-                np.copyto(self.curval[:, :, i], merge(self.name, self.nxtval[:, :, i]))
+                mNumpy.copyto(self.curval[:, :, i], merge(self.name, self.nxtval[:, :, i]))
 
 
 class Relation(object):
@@ -190,25 +176,25 @@ class Relation(object):
         self.name = name
         context[name] = self
 
-        self.drvval = np.zeros([lng_size, lat_size, alt_size])
-        self.nxtval = np.zeros([lng_size, lat_size, alt_size])
+        self.drvval = mNumpy.zeros([lng_size, lat_size, alt_size])
+        self.nxtval = mNumpy.zeros([lng_size, lat_size, alt_size])
         if initfn:
             self.curval = initfn()
         else:
-            self.curval = np.ones([lng_size, lat_size, alt_size]) * initval
+            self.curval = mNumpy.ones([lng_size, lat_size, alt_size]) * initval
 
     def evolve(self, dt):
         kwargs = {k: v.curval for k, v in context.iteritems()}
         val = self.step(**kwargs)
         for i in range(32):
-            np.copyto(self.nxtval[:, :, i], merge(self.name, val[:, :, i], dt))
+            mNumpy.copyto(self.nxtval[:, :, i], merge(self.name, val[:, :, i], dt))
         self.drvval[:, :, :] = (self.nxtval - self.curval) / dt
 
     def step(self, ** kwargs):
         return self.nxtval
 
     def swap(self):
-        np.copyto(self.curval, self.nxtval)
+        mNumpy.copyto(self.curval, self.nxtval)
 
 
 

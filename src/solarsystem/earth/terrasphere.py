@@ -1,23 +1,23 @@
 # -*- coding: utf-8 -*-
 
-import numpy as np
+import numpy as mNumpy
 import cv2
 
 from os import path
 
-import solarsys
+import solarsystem
 
-from solarsys.earth import Relation, Grid
-from solarsys import shape, zero, bottom, theta, phi, dSr, alt, lng, lat
-from solarsys.earth import StefanBoltzmann, WaterHeatCapacity, RockHeatCapacity, SunConst, WaterDensity, RockDensity
+from solarsystem.earth import Relation, Grid
+from solarsystem import shape, zero, bottom, theta, phi, dSr, mAltitude, mLongitude, mLatitude
+from physicalconstant import EARTH_STEFAN_BOLTZMANN_CONSTANT, EARTH_WATER_HEAT_CAPACITY, EARTH_ROCK_HEAT_CAPACITY, EARTH_WATER_DENSITY, EARTH_ROCK_DENSITY, SUN_CONST
 
 
 if not path.exists('data/continent.npy'):
     im = cv2.imread('data/earth-continent.png', 0)
-    np.save('data/continent', im > 250)
+    mNumpy.save('data/continent', im > 250)
 
-cntndata = np.array(np.load('data/continent.npy'), dtype=np.float64).T
-cntndata = (cv2.resize(cntndata, (shape[1], shape[0])))[:, :, np.newaxis]
+cntndata = mNumpy.array(mNumpy.load('data/continent.npy'), dtype=mNumpy.float64).T
+cntndata = (cv2.resize(cntndata, (shape[1], shape[0])))[:, :, mNumpy.newaxis]
 
 
 def continent():
@@ -29,7 +29,7 @@ def relu(x):
 
 
 def zinit(**kwargs):
-    return np.copy(zero)
+    return mNumpy.copy(zero)
 
 
 def tinit():
@@ -43,10 +43,10 @@ class TLGrd(Grid):
 
     def step(self, u=None, v=None, w=None, rao=None, p=None, T=None, q=None, dQ=None, dH=None, lt=None, si=None, tc=None):
         contnt = continent()
-        capacity = WaterHeatCapacity * (1 - contnt) + RockHeatCapacity * contnt
-        density = WaterDensity * (1 - contnt) + RockDensity * contnt
+        capacity = EARTH_WATER_HEAT_CAPACITY * (1 - contnt) + EARTH_ROCK_HEAT_CAPACITY * contnt
+        density = EARTH_WATER_DENSITY * (1 - contnt) + EARTH_ROCK_DENSITY * contnt
 
-        return (si + StefanBoltzmann * T * T * T * T / 2 - StefanBoltzmann * lt * lt * lt * lt) / (capacity * density) * bottom
+        return (si + EARTH_STEFAN_BOLTZMANN_CONSTANT * T * T * T * T / 2 - EARTH_STEFAN_BOLTZMANN_CONSTANT * lt * lt * lt * lt) / (capacity * density) * bottom
 
 
 class SIGrd(Grid):
@@ -57,13 +57,13 @@ class SIGrd(Grid):
     def step(self, u=None, v=None, w=None, rao=None, p=None, T=None, q=None, dQ=None, dH=None, lt=None, si=None, tc=None):
         albedo = 0.7 * (lt > 273.15) + 0.1 * (lt < 273.15) # considering ice and soil
 
-        doy = np.mod(solarsys.t / 3600 / 24, 365.24)
-        hod = np.mod(solarsys.t / 3600 - lng / 15.0, 24)
-        ha = 2 * np.pi * hod / 24
-        decline = - 23.44 / 180 * np.pi * np.cos(2 * np.pi * (doy + 10) / 365)
-        sza_coeff = np.sin(phi) * np.sin(decline) + np.cos(phi) * np.cos(decline) * np.cos(ha)
+        doy = mNumpy.mod(solarsystem.t / 3600 / 24, 365.24)
+        hod = mNumpy.mod(solarsystem.t / 3600 - mLongitude / 15.0, 24)
+        ha = 2 * mNumpy.pi * hod / 24
+        decline = - 23.44 / 180 * mNumpy.pi * mNumpy.cos(2 * mNumpy.pi * (doy + 10) / 365)
+        sza_coeff = mNumpy.sin(phi) * mNumpy.sin(decline) + mNumpy.cos(phi) * mNumpy.cos(decline) * mNumpy.cos(ha)
 
-        return albedo * relu(sza_coeff) * SunConst * tc * bottom
+        return albedo * relu(sza_coeff) * SUN_CONST * tc * bottom
 
 
 class TotalCloudage(Relation):
@@ -72,11 +72,11 @@ class TotalCloudage(Relation):
         super(TotalCloudage, self).__init__('tc', lng_size, lat_size, alt_size, initfn=tinit)
 
     def step(self, u=None, v=None, w=None, rao=None, p=None, T=None, q=None, dQ=None, dH=None, lt=None, si=None, tc=None):
-        dT = solarsys.earth.context['T'].drvval
-        cloudage = np.sqrt(q) * (dT < 0) * (q > 0.0001)
+        dT = solarsystem.earth.context['T'].drvval
+        cloudage = mNumpy.sqrt(q) * (dT < 0) * (q > 0.0001)
 
         ratio = 1 - cloudage
-        ratio_total = np.copy(bottom)
+        ratio_total = mNumpy.copy(bottom)
         for ix in range(32):
             ratio_total[:, :, 0] = ratio_total[:, :, 0] * ratio[:, :, ix]
 

@@ -1,53 +1,54 @@
 # -*- coding: utf-8 -*-
 
-import numpy as np
+import numpy as mNumpy
 import pygame
 import time
 
-import solarsys
+import solarsystem
 
-from solarsys.earth.atmosphere import UGrd, VGrd, WGrd, TGrd, RGrd, QGrd, PRel, dHRel, dQRel
-from solarsys.earth.terrasphere import TLGrd, SIGrd, continent, TotalCloudage, SunConst
+from physicalconstant import SUN_CONST
+from solarsystem.earth.atmosphere import UGrd, VGrd, WGrd, TGrd, RGrd, QGrd, PRel, dHRel, dQRel
+from solarsystem.earth.terrasphere import TLGrd, SIGrd, continent, TotalCloudage
 
 
-u = UGrd(solarsys.shape)
-v = VGrd(solarsys.shape)
-w = WGrd(solarsys.shape)
-T = TGrd(solarsys.shape)
-rao = RGrd(solarsys.shape)
-q = QGrd(solarsys.shape)
+u = UGrd(solarsystem.shape)
+v = VGrd(solarsystem.shape)
+w = WGrd(solarsystem.shape)
+T = TGrd(solarsystem.shape)
+rao = RGrd(solarsystem.shape)
+q = QGrd(solarsystem.shape)
 
-p = PRel(solarsys.shape)
-dH = dHRel(solarsys.shape)
-dQ = dQRel(solarsys.shape)
+p = PRel(solarsystem.shape)
+dH = dHRel(solarsystem.shape)
+dQ = dQRel(solarsystem.shape)
 
-tl = TLGrd(solarsys.shape)
-si = SIGrd(solarsys.shape)
-tc = TotalCloudage(solarsys.shape)
+tl = TLGrd(solarsystem.shape)
+si = SIGrd(solarsystem.shape)
+tc = TotalCloudage(solarsystem.shape)
 
 cntn = continent()
 
 
 def evolve():
-    s = np.sqrt(u.curval * u.curval + v.curval * v.curval + w.curval * w.curval + 0.00001)
-    dt = 100 / np.max(s)
+    s = mNumpy.sqrt(u.curval * u.curval + v.curval * v.curval + w.curval * w.curval + 0.00001)
+    dt = 100 / mNumpy.max(s)
     if dt > 1:
         dt = 1
-    solarsys.t = solarsys.t + dt
+    solarsystem.t = solarsystem.t + dt
     print '----------------------------------------------------'
-    print solarsys.t, dt
+    print solarsystem.t, dt
     tmp = 0.5 * s[:, :, 0] + 0.5 * s[:, :, 1]
-    print 'wind: ', np.max(tmp), np.min(tmp), np.mean(tmp)
+    print 'wind:       ', mNumpy.max(tmp), mNumpy.min(tmp), mNumpy.mean(tmp)
     tmp = T.curval[:, :, 0] - 273.15
-    print 'temp', np.max(tmp), np.min(tmp), np.mean(tmp)
+    print 'temperature ', mNumpy.max(tmp), mNumpy.min(tmp), mNumpy.mean(tmp)
     tmp = p.curval[:, :, 0] / 101325
-    print 'pres', np.max(tmp), np.min(tmp), np.mean(tmp)
+    print 'pressure    ', mNumpy.max(tmp), mNumpy.min(tmp), mNumpy.mean(tmp)
     tmp = rao.curval[:, :, 0]
-    print 'rao', np.max(tmp), np.min(tmp), np.mean(tmp)
+    print 'rao         ', mNumpy.max(tmp), mNumpy.min(tmp), mNumpy.mean(tmp)
     tmp = q.curval[:, :, 0]
-    print 'humd', np.max(tmp), np.min(tmp), np.mean(tmp)
+    print 'humidity    ', mNumpy.max(tmp), mNumpy.min(tmp), mNumpy.mean(tmp)
     tmp = tc.curval[:, :, 0]
-    print 'cldg', np.max(tmp), np.min(tmp), np.mean(tmp)
+    print 'cldg', mNumpy.max(tmp), mNumpy.min(tmp), mNumpy.mean(tmp)
 
     u.evolve(dt)
     v.evolve(dt)
@@ -88,11 +89,11 @@ def normalize(array, minv, maxv):
 
 
 if __name__ == '__main__':
-    map_width = solarsys.shape[0]
-    map_height = solarsys.shape[1]
+    map_width = solarsystem.shape[0]
+    map_height = solarsystem.shape[1]
 
     tile_size = 6
-    gap = int(12 / solarsys.dlng)
+    gap = int(12 / solarsystem.dLongitude)
     wind_size = tile_size * gap
 
     pygame.init()
@@ -126,15 +127,15 @@ if __name__ == '__main__':
         umap = 0.5 * u.curval[:, :, 0] + 0.5 * u.curval[:, :, 1]
         vmap = 0.5 * v.curval[:, :, 0] + 0.5 * v.curval[:, :, 1]
         wmap = 0.5 * w.curval[:, :, 0] + 0.5 * w.curval[:, :, 1]
-        smap = np.sqrt(umap * umap + vmap * vmap + 0.001)
+        smap = mNumpy.sqrt(umap * umap + vmap * vmap + 0.001)
 
-        bcmap = normalize(bmap, 0, np.max(bmap))
+        bcmap = normalize(bmap, 0, mNumpy.max(bmap))
         tcmap = normalize(tmap, 200, 374)
         ccmap = normalize(cmap, 0, 1)
-        scmap = normalize(smap, 0, np.max(smap))
-        ucmap = normalize(umap, 0, np.max(umap))
-        vcmap = normalize(vmap, 0, np.max(vmap))
-        wcmap = normalize(wmap, 0, np.max(wmap))
+        scmap = normalize(smap, 0, mNumpy.max(smap))
+        ucmap = normalize(umap, 0, mNumpy.max(umap))
+        vcmap = normalize(vmap, 0, mNumpy.max(vmap))
+        wcmap = normalize(wmap, 0, mNumpy.max(wmap))
 
         r = (tcmap * 2 / 3 + 72 * mapc) * (tmap > 273.15) + (128 + tcmap / 2 + 72 * mapc) * (tmap <= 273.15)
         g = (128 + ccmap - 72 * mapc) + (256 + ccmap - 72 * mapc) * (tmap <= 273.15)
@@ -144,8 +145,8 @@ if __name__ == '__main__':
         g = g * bcmap / (255 + 200)
         b = b * bcmap / (255 + 200)
 
-        for ixlng in range(solarsys.shape[0]):
-            for ixlat in range(solarsys.shape[1]):
+        for ixlng in range(solarsystem.shape[0]):
+            for ixlat in range(solarsystem.shape[1]):
                 uval = umap[ixlng, ixlat]
                 vval = vmap[ixlng, ixlat]
                 sval = smap[ixlng, ixlat]
@@ -175,14 +176,14 @@ if __name__ == '__main__':
                     tilew.fill((255, 255, 255))
                     tilew.fill((255, 255, 255))
                     size = length
-                    if np.absolute(uval) >= np.absolute(vval):
-                        alpha = np.arctan2(uval, vval)
-                        pygame.draw.aaline(tilew, (wcolor, ucolor, vcolor), [wind_size / 2.0 - size * np.cos(alpha), wind_size / 2.0 - size * np.sin(alpha)],
-                                                                            [wind_size / 2.0 + size * np.cos(alpha), wind_size / 2.0 + size * np.sin(alpha)], True)
+                    if mNumpy.absolute(uval) >= mNumpy.absolute(vval):
+                        alpha = mNumpy.arctan2(uval, vval)
+                        pygame.draw.aaline(tilew, (wcolor, ucolor, vcolor), [wind_size / 2.0 - size * mNumpy.cos(alpha), wind_size / 2.0 - size * mNumpy.sin(alpha)],
+                                                                            [wind_size / 2.0 + size * mNumpy.cos(alpha), wind_size / 2.0 + size * mNumpy.sin(alpha)], True)
                     else:
-                        alpha = np.arctan2(vval, uval)
-                        pygame.draw.aaline(tilew, (wcolor, ucolor, vcolor), [wind_size / 2.0 - size * np.sin(alpha), wind_size / 2.0 - size * np.cos(alpha)],
-                                                                                           [wind_size / 2.0 + size * np.sin(alpha), wind_size / 2.0 + size * np.cos(alpha)], True)
+                        alpha = mNumpy.arctan2(vval, uval)
+                        pygame.draw.aaline(tilew, (wcolor, ucolor, vcolor), [wind_size / 2.0 - size * mNumpy.sin(alpha), wind_size / 2.0 - size * mNumpy.cos(alpha)],
+                                                                                           [wind_size / 2.0 + size * mNumpy.sin(alpha), wind_size / 2.0 + size * mNumpy.cos(alpha)], True)
 
                     screen.blit(tilew, (ixlng * tile_size, ixlat * tile_size))
 
