@@ -85,8 +85,9 @@ def filter_extream_vector(name, array, u, v, w):
                     inject_random_nearby(i, j, xthresh, speed, v, array)
                 if name == 'w':
                     inject_random_nearby(i, j, xthresh, speed, w, array)
-
-    mNumpy.copyto(array, 0.97 * array)
+    speed = u * u + v * v + w * w
+    level = mNumpy.log(speed / 9 * (speed / 9 > 1) + (speed / 9 < 1)) * mNumpy.sqrt(speed / 3000)
+    mNumpy.copyto(array, (1 - 0.01 * level) * array)
 
 
 def combine_scalar(array):

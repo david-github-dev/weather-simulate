@@ -37,6 +37,7 @@ def evolve():
     solarsystem.t = solarsystem.t + dt
     print '----------------------------------------------------'
     print solarsystem.t, dt
+    print 'speed: ', mNumpy.max(s), mNumpy.min(s), mNumpy.mean(s)
     tmp = 0.5 * s[:, :, 0] + 0.5 * s[:, :, 1]
     print 'wind:       ', mNumpy.max(tmp), mNumpy.min(tmp), mNumpy.mean(tmp)
     tmp = T.curval[:, :, 0] - 273.15
@@ -138,12 +139,12 @@ if __name__ == '__main__':
         wcmap = normalize(wmap, 0, mNumpy.max(wmap))
 
         r = (tcmap * 2 / 3 + 72 * mapc) * (tmap > 273.15) + (128 + tcmap / 2 + 72 * mapc) * (tmap <= 273.15)
-        g = (128 + ccmap - 72 * mapc) + (256 + ccmap - 72 * mapc) * (tmap <= 273.15)
-        b = (128 + ccmap - 72 * mapc) + (256 + ccmap - 72 * mapc) * (tmap <= 273.15)
-        bcmap = bcmap + 200
-        r = r * bcmap / (255 + 200)
-        g = g * bcmap / (255 + 200)
-        b = b * bcmap / (255 + 200)
+        g = (128 + ccmap - 72 * mapc) * (tmap > 273.15) + (256 + ccmap - 72 * mapc) * (tmap <= 273.15)
+        b = (128 + ccmap - 72 * mapc) * (tmap > 273.15) + (256 + ccmap - 72 * mapc) * (tmap <= 273.15)
+        bcmap = bcmap + 100
+        r = r * bcmap / (255 + 100)
+        g = g * bcmap / (255 + 100)
+        b = b * bcmap / (255 + 100)
 
         for ixlng in range(solarsystem.shape[0]):
             for ixlat in range(solarsystem.shape[1]):
@@ -162,26 +163,27 @@ if __name__ == '__main__':
                 rval = r[ixlng, ixlat]
                 gval = g[ixlng, ixlat]
                 bval = b[ixlng, ixlat]
-                rval = rval * (rval > 0) * (rval < 256) + 255 * (rval > 255)
-                gval = gval * (rval > 0) * (gval < 256) + 255 * (gval > 255)
-                bval = bval * (rval > 0) * (bval < 256) + 255 * (bval > 255)
+                rval = rval * (rval > 0) * (rval <= 255) + 255 * (rval > 255)
+                gval = gval * (rval > 0) * (gval <= 255) + 255 * (gval > 255)
+                bval = bval * (rval > 0) * (bval <= 255) + 255 * (bval > 255)
 
-                tilep.fill((rval, gval, bval))
+                try:
+                    tilep.fill((rval, gval, bval))
+                except:
+                    print rval, gval, bval
                 tilep.set_alpha((255 - ccolor) / 2)
                 screen.blit(tilep, (ixlng * tile_size, ixlat * tile_size))
 
                 if ixlng % gap == 0 and ixlat % gap == 0:
                     length = wind_size / 2 * scolor / 256.0
                     tilew.fill((255, 255, 255))
-                    tilew.fill((255, 255, 255))
-                    tilew.fill((255, 255, 255))
                     size = length
                     if mNumpy.absolute(uval) >= mNumpy.absolute(vval):
-                        alpha = mNumpy.arctan2(uval, vval)
+                        alpha = mNumpy.arctan2(vval, uval)
                         pygame.draw.aaline(tilew, (wcolor, ucolor, vcolor), [wind_size / 2.0 - size * mNumpy.cos(alpha), wind_size / 2.0 - size * mNumpy.sin(alpha)],
                                                                             [wind_size / 2.0 + size * mNumpy.cos(alpha), wind_size / 2.0 + size * mNumpy.sin(alpha)], True)
                     else:
-                        alpha = mNumpy.arctan2(vval, uval)
+                        alpha = mNumpy.arctan2(uval, vval)
                         pygame.draw.aaline(tilew, (wcolor, ucolor, vcolor), [wind_size / 2.0 - size * mNumpy.sin(alpha), wind_size / 2.0 - size * mNumpy.cos(alpha)],
                                                                                            [wind_size / 2.0 + size * mNumpy.sin(alpha), wind_size / 2.0 + size * mNumpy.cos(alpha)], True)
 

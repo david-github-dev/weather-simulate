@@ -14,7 +14,7 @@ from physicalconstant import EARTH_STEFAN_BOLTZMANN_CONSTANT, EARTH_WATER_HEAT_C
 
 if not path.exists('data/continent.npy'):
     im = cv2.imread('data/earth-continent.png', 0)
-    mNumpy.save('data/continent', im > 250)
+    mNumpy.save('data/continent', im > 200)
 
 cntndata = mNumpy.array(mNumpy.load('data/continent.npy'), dtype=mNumpy.float64).T
 cntndata = (cv2.resize(cntndata, (shape[1], shape[0])))[:, :, mNumpy.newaxis]
