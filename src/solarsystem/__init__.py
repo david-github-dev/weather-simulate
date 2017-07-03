@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import numpy as mNumpy
-from physicalconstant import EARTH_MEAN_RADIUS
+import physicalconstant as mPhysicalConstant
 
 t = 0
 
@@ -34,7 +34,7 @@ dth = mNumpy.pi / 180 * dLongitude * one
 dph = mNumpy.pi / 180 * dLatitude * one
 dr = 1 * dAltitude * one
 
-r = EARTH_MEAN_RADIUS + mAltitude
+r = mPhysicalConstant.EARTH_MEAN_RADIUS + mAltitude
 theta = mLongitude * mNumpy.pi / 180
 phi = mLatitude * mNumpy.pi / 180
 

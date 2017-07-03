@@ -3,7 +3,7 @@
 import numpy as mNumpy
 from numpy.random import random
 
-from solarsystem import dLongitude, dLatitude, dAltitude, bottom, top, mNorthPole, mSouthPole, theta
+from solarsystem import bottom, top, mNorthPole, mSouthPole, theta
 
 context = {}
 
@@ -23,7 +23,7 @@ def inject_random_nearby(i, j, thresh, speed, src, tgt):
     tries = 0
     replacement = thresh
     while tries < 3:
-        dx, dy = random(), random()
+        dx, dy =  random(), random()
         while replacement > thresh:
             i, j = i + dx, j + dy
             if j < 0:

@@ -1,32 +1,30 @@
 # -*- coding: utf-8 -*-
 
 import numpy as mNumpy
-import pygame
-import time
+import pygame as mPygame
+import time as mTime
+import solarsystem as mSolarSystem
 
-import solarsystem
-
-from physicalconstant import SUN_CONST
-from solarsystem.earth.atmosphere import UGrd, VGrd, WGrd, TGrd, RGrd, QGrd, PRel, dHRel, dQRel
-from solarsystem.earth.terrasphere import TLGrd, SIGrd, continent, TotalCloudage
+from solarsystem.earth import atmosphere as mAtmosphere
+from solarsystem.earth import terrasphere as mTerrasphere
 
 
-u = UGrd(solarsystem.shape)
-v = VGrd(solarsystem.shape)
-w = WGrd(solarsystem.shape)
-T = TGrd(solarsystem.shape)
-rao = RGrd(solarsystem.shape)
-q = QGrd(solarsystem.shape)
+u   = mAtmosphere.UGrd(mSolarSystem.shape)
+v   = mAtmosphere.VGrd(mSolarSystem.shape)
+w   = mAtmosphere.WGrd(mSolarSystem.shape)
+T   = mAtmosphere.TGrd(mSolarSystem.shape)
+rao = mAtmosphere.RGrd(mSolarSystem.shape)
+q   = mAtmosphere.QGrd(mSolarSystem.shape)
 
-p = PRel(solarsystem.shape)
-dH = dHRel(solarsystem.shape)
-dQ = dQRel(solarsystem.shape)
+p   = mAtmosphere.PRel(mSolarSystem.shape)
+dH  = mAtmosphere.dHRel(mSolarSystem.shape)
+dQ  = mAtmosphere.dQRel(mSolarSystem.shape)
 
-tl = TLGrd(solarsystem.shape)
-si = SIGrd(solarsystem.shape)
-tc = TotalCloudage(solarsystem.shape)
+tl  = mTerrasphere.TLGrd(mSolarSystem.shape)
+si  = mTerrasphere.SIGrd(mSolarSystem.shape)
+tc  = mTerrasphere.TotalCloudage(mSolarSystem.shape)
 
-cntn = continent()
+mContinent = mTerrasphere.continent()
 
 
 def evolve():
@@ -34,9 +32,9 @@ def evolve():
     dt = 100 / mNumpy.max(s)
     if dt > 1:
         dt = 1
-    solarsystem.t = solarsystem.t + dt
+    mSolarSystem.t = mSolarSystem.t + dt
     print '----------------------------------------------------'
-    print solarsystem.t, dt
+    print mSolarSystem.t, dt
     print 'speed: ', mNumpy.max(s), mNumpy.min(s), mNumpy.mean(s)
     tmp = 0.5 * s[:, :, 0] + 0.5 * s[:, :, 1]
     print 'wind:       ', mNumpy.max(tmp), mNumpy.min(tmp), mNumpy.mean(tmp)
@@ -90,21 +88,20 @@ def normalize(array, minv, maxv):
 
 
 if __name__ == '__main__':
-    map_width = solarsystem.shape[0]
-    map_height = solarsystem.shape[1]
+    mWidth = mSolarSystem.shape[0]
+    mHeight = mSolarSystem.shape[1]
+    mTileSize = 6
+    mGap = int(12 / mSolarSystem.dLongitude)
+    wind_size = mTileSize * mGap
 
-    tile_size = 6
-    gap = int(12 / solarsystem.dLongitude)
-    wind_size = tile_size * gap
-
-    pygame.init()
-    screen = pygame.display.set_mode((map_width * tile_size, map_height * tile_size))
-    background = pygame.Surface(screen.get_size())
-    tilep = pygame.Surface((tile_size, tile_size))
-    tilew = pygame.Surface((wind_size, wind_size))
+    mPygame.init()
+    mScreen = mPygame.display.set_mode((mWidth * mTileSize, mHeight * mTileSize))
+    mBackground = mPygame.Surface(mScreen.get_size())
+    tilep = mPygame.Surface((mTileSize, mTileSize))
+    tilew = mPygame.Surface((wind_size, wind_size))
     tilew.set_alpha(128)
 
-    clock = pygame.time.Clock()
+    mClock = mPygame.time.Clock()
 
     first_gen = True
     timer = 12
@@ -112,16 +109,16 @@ if __name__ == '__main__':
     running = True
     lasttile = 0
     while running == True:
-        clock.tick(5)
-        time.sleep(1)
-        pygame.display.set_caption('FPS: ' + str(clock.get_fps()))
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+        mClock.tick(5)
+        mTime.sleep(1)
+        mPygame.display.set_caption('FPS: ' + str(mClock.get_fps()))
+        for event in mPygame.event.get():
+            if event.type == mPygame.QUIT:
                 running = False
 
         evolve()
 
-        mapc = cntn[:, :, 0]
+        mapc = mContinent[:, :, 0]
         bmap = si.curval[:, :, 0]
         tmap = T.curval[:, :, 0]
         cmap = tc.curval[:, :, 0]
@@ -146,8 +143,8 @@ if __name__ == '__main__':
         g = g * bcmap / (255 + 100)
         b = b * bcmap / (255 + 100)
 
-        for ixlng in range(solarsystem.shape[0]):
-            for ixlat in range(solarsystem.shape[1]):
+        for ixlng in range(mSolarSystem.shape[0]):
+            for ixlat in range(mSolarSystem.shape[1]):
                 uval = umap[ixlng, ixlat]
                 vval = vmap[ixlng, ixlat]
                 sval = smap[ixlng, ixlat]
@@ -172,29 +169,29 @@ if __name__ == '__main__':
                 except:
                     print rval, gval, bval
                 tilep.set_alpha((255 - ccolor) / 2)
-                screen.blit(tilep, (ixlng * tile_size, ixlat * tile_size))
+                mScreen.blit(tilep, (ixlng * mTileSize, ixlat * mTileSize))
 
-                if ixlng % gap == 0 and ixlat % gap == 0:
+                if ixlng % mGap == 0 and ixlat % mGap == 0:
                     length = wind_size / 2 * scolor / 256.0
                     tilew.fill((255, 255, 255))
                     size = length
                     if mNumpy.absolute(uval) >= mNumpy.absolute(vval):
                         alpha = mNumpy.arctan2(vval, uval)
-                        pygame.draw.aaline(tilew, (wcolor, ucolor, vcolor), [wind_size / 2.0 - size * mNumpy.cos(alpha), wind_size / 2.0 - size * mNumpy.sin(alpha)],
+                        mPygame.draw.aaline(tilew, (wcolor, ucolor, vcolor), [wind_size / 2.0 - size * mNumpy.cos(alpha), wind_size / 2.0 - size * mNumpy.sin(alpha)],
                                                                             [wind_size / 2.0 + size * mNumpy.cos(alpha), wind_size / 2.0 + size * mNumpy.sin(alpha)], True)
                     else:
                         alpha = mNumpy.arctan2(uval, vval)
-                        pygame.draw.aaline(tilew, (wcolor, ucolor, vcolor), [wind_size / 2.0 - size * mNumpy.sin(alpha), wind_size / 2.0 - size * mNumpy.cos(alpha)],
+                        mPygame.draw.aaline(tilew, (wcolor, ucolor, vcolor), [wind_size / 2.0 - size * mNumpy.sin(alpha), wind_size / 2.0 - size * mNumpy.cos(alpha)],
                                                                                            [wind_size / 2.0 + size * mNumpy.sin(alpha), wind_size / 2.0 + size * mNumpy.cos(alpha)], True)
 
-                    screen.blit(tilew, (ixlng * tile_size, ixlat * tile_size))
+                    mScreen.blit(tilew, (ixlng * mTileSize, ixlat * mTileSize))
 
         flip()
-        pygame.display.flip()
+        mPygame.display.flip()
 
         if first_gen:
             timer -= 1
             if timer < 0:
                 first_gen = False
 
-    pygame.quit()
+    mPygame.quit()
